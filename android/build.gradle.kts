@@ -18,13 +18,15 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 
-    // CameraX references this AndroidX class during compilation. Keep the
-    // dependency explicit so camera_android_camerax can resolve it reliably.
+    // Add the dependency after the CameraX Android library plugin has
+    // created its implementation configuration.
     if (project.name == "camera_android_camerax") {
-        project.dependencies.add(
-            "implementation",
-            "androidx.concurrent:concurrent-futures:1.2.0"
-        )
+        plugins.withId("com.android.library") {
+            dependencies.add(
+                "implementation",
+                "androidx.concurrent:concurrent-futures:1.2.0"
+            )
+        }
     }
 }
 
