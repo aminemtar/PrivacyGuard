@@ -7,9 +7,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:privacy_guard/features/detection/detection_engine.dart';
+import 'package:privacy_guard/features/protection/privacy_overlay.dart';
 
-import '../../protection/privacy_overlay.dart';
-import '../detection_engine.dart';
 
 class CameraDetectionScreen extends StatefulWidget {
   const CameraDetectionScreen({super.key});
