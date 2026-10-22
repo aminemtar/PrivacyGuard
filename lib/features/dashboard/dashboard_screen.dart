@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/privacy_guard_app.dart';
+import '../../platform/android_privacy_overlay.dart';
 import '../detection/camera_detection_screen.dart';
 import '../protection/privacy_overlay.dart';
 
@@ -17,6 +19,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _enabled = false;
   bool _demoProtection = false;
   bool _loading = true;
+  bool _systemOverlayActive = false;
+  bool _overlayBusy = false;
 
   @override
   void initState() {
@@ -26,11 +30,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadSettings() async {
     final preferences = await SharedPreferences.getInstance();
+    final overlayActive = await AndroidPrivacyOverlay.hasPermission().catchError((_) => false);
     if (!mounted) return;
     setState(() {
       _enabled = preferences.getBool(_enabledKey) ?? false;
       _loading = false;
+      // This tracks permission availability, not whether the native window is active.
+      _systemOverlayActive = false;
     });
+    if (!overlayActive) {
+      // Keep the dashboard usable if Android overlay access has not been granted.
+    }
   }
 
   Future<void> _setEnabled(bool value) async {
@@ -74,16 +84,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 10),
                     _buildToolCard(
                       icon: Icons.layers_rounded,
-                      title: 'Privacy shield preview',
-                      subtitle: 'Test how sensitive content can be covered inside the app.',
+                      title: 'In-app privacy shield',
+                      subtitle: 'Preview a shield that covers content inside Privacy Guard.',
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () => setState(() => _demoProtection = !_demoProtection),
                     ),
                     const SizedBox(height: 10),
                     _buildToolCard(
+                      icon: Icons.phonelink_lock_rounded,
+                      title: _systemOverlayActive ? 'Stop Android screen filter' : 'Android-wide screen filter',
+                      subtitle: defaultTargetPlatform == TargetPlatform.android
+                          ? 'Apply a dim privacy tint over other apps. Requires “Display over other apps” access.'
+                          : 'Available on Android only; iOS does not allow covering other apps.',
+                      trailing: _overlayBusy
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              _systemOverlayActive ? Icons.toggle_on_rounded : Icons.chevron_right_rounded,
+                              color: _systemOverlayActive ? PrivacyGuardApp.cyan : null,
+                              size: 26,
+                            ),
+                      onTap: _overlayBusy ? () {} : _toggleAndroidOverlay,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildToolCard(
                       icon: Icons.tune_rounded,
                       title: 'Sensitivity & permissions',
-                      subtitle: 'Review the camera and on-device processing limits.',
+                      subtitle: 'Review camera detection and platform limitations.',
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: _showPermissionInfo,
                     ),
@@ -305,7 +335,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Camera frames are analyzed on-device and are not saved or uploaded. Face detection is only a signal and cannot prove someone is reading your screen.',
+              'Camera frames are analyzed on-device and are not saved or uploaded. The Android-wide tint is a manual software overlay, not a physical anti-spy screen and not automatic face-triggered protection.',
               style: TextStyle(color: Colors.white70, height: 1.45, fontSize: 12.5),
             ),
           ),
@@ -320,6 +350,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Future<void> _toggleAndroidOverlay() async {
+    if (!AndroidPrivacyOverlay.isSupported) {
+      _showMessage('Cross-app screen overlays are not available on iOS.');
+      return;
+    }
+
+    setState(() => _overlayBusy = true);
+    try {
+      if (_systemOverlayActive) {
+        await AndroidPrivacyOverlay.stop();
+        if (mounted) setState(() => _systemOverlayActive = false);
+        _showMessage('Android screen filter stopped.');
+        return;
+      }
+
+      final permitted = await AndroidPrivacyOverlay.hasPermission();
+      if (!permitted) {
+        await AndroidPrivacyOverlay.requestPermission();
+        _showMessage('Allow “Display over other apps”, return here, then tap the filter again.');
+        return;
+      }
+
+      final started = await AndroidPrivacyOverlay.start();
+      if (mounted) setState(() => _systemOverlayActive = started);
+      _showMessage(
+        started
+            ? 'Screen tint active. Return to Privacy Guard to stop it.'
+            : 'Android did not start the overlay. Check overlay permission in Settings.',
+      );
+    } on PlatformException catch (error) {
+      _showMessage('Could not control the Android filter: ${error.message ?? error.code}');
+    } catch (error) {
+      _showMessage('Could not control the Android filter: $error');
+    } finally {
+      if (mounted) setState(() => _overlayBusy = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   void _showPermissionInfo() {
     showAboutDialog(
       context: context,
@@ -329,7 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: const [
         SizedBox(height: 12),
         Text(
-          'Cross-app overlays are platform-dependent. iOS apps cannot generally cover other apps, and Android may require special user-granted permissions.',
+          'Android-wide tint requires special “Display over other apps” access. It is a manual dim overlay only. Camera-based automatic protection is limited to the app while it is active; Android and device policies restrict background camera use. iOS cannot generally cover other apps.',
         ),
       ],
     );
