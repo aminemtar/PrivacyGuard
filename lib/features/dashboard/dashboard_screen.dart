@@ -320,29 +320,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showDetectionStatus() {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: const Color(0xFF10223A),
-      builder: (context) => const Padding(
-        padding: EdgeInsets.fromLTRB(24, 8, 24, 30),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Shoulder-surfing detection', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-            SizedBox(height: 12),
-            Text(
-              'The next phase connects the front camera to on-device face detection. Multiple faces can trigger a privacy warning, but they do not prove that another person is looking at the screen.',
-              style: TextStyle(height: 1.5, color: Colors.white70),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showPermissionInfo() {
     showAboutDialog(
       context: context,
