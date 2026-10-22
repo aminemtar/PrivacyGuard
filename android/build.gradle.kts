@@ -17,6 +17,15 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+
+    // CameraX references this AndroidX class during compilation. Keep the
+    // dependency explicit so camera_android_camerax can resolve it reliably.
+    if (project.name == "camera_android_camerax") {
+        project.dependencies.add(
+            "implementation",
+            "androidx.concurrent:concurrent-futures:1.2.0"
+        )
+    }
 }
 
 tasks.register<Delete>("clean") {
