@@ -20,16 +20,11 @@ Flutter app for experimenting with shoulder-surfing signals and in-app privacy p
 
 ## Run locally
 
-This repository currently contains the Dart application layer and does not yet include generated `android/` and `ios/` platform folders.
+The repository includes the Flutter application and generated Android/iOS platform folders.
 
 1. Install Flutter stable and clone this repository.
-2. From the repository root, generate the native project folders:
-
-   ```bash
-   flutter create . --platforms=android,ios
-   ```
-
-3. Add the camera permission declarations described below, then run:
+2. Ensure the iOS deployment target is at least 15.5 (required by ML Kit).
+3. The Android camera permission and iOS camera usage description are already declared in the platform files. Then run:
 
    ```bash
    flutter pub get
@@ -40,14 +35,14 @@ This repository currently contains the Dart application layer and does not yet i
 
 ### Required camera permissions
 
-Add a camera usage description to `ios/Runner/Info.plist`:
+The camera usage description is declared in `ios/Runner/Info.plist`:
 
 ```xml
 <key>NSCameraUsageDescription</key>
 <string>Privacy Guard uses the front camera to detect a possible nearby viewer. Frames are processed on this device.</string>
 ```
 
-Add this permission to `android/app/src/main/AndroidManifest.xml`, above the `<application>` element:
+The Android camera permission is declared in `android/app/src/main/AndroidManifest.xml`, above the `<application>` element:
 
 ```xml
 <uses-permission android:name="android.permission.CAMERA" />
