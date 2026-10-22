@@ -1,31 +1,30 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:privacy_guard/app/privacy_guard_app.dart';
-
-import 'package:privacy_guard/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets('shows the Privacy Guard dashboard', (WidgetTester tester) async {
     await tester.pumpWidget(const PrivacyGuardApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Privacy Guard'), findsOneWidget);
+    expect(find.text('Smart privacy\nprotection'), findsOneWidget);
+    expect(find.text('Shoulder-surfing detection'), findsOneWidget);
+    expect(find.text('Enable guard'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('can enable the guard from the dashboard', (WidgetTester tester) async {
+    await tester.pumpWidget(const PrivacyGuardApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Enable guard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Disable guard'), findsOneWidget);
+    expect(find.text('Protection enabled'), findsOneWidget);
   });
 }
