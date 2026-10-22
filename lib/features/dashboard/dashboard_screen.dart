@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/privacy_guard_app.dart';
+import '../detection/camera_detection_screen.dart';
 import '../protection/privacy_overlay.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -66,9 +67,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildToolCard(
                       icon: Icons.visibility_rounded,
                       title: 'Shoulder-surfing detection',
-                      subtitle: 'Use the front camera to detect a possible second face.',
+                      subtitle: 'Analyze front-camera frames locally for a possible second viewer.',
                       trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: _showDetectionStatus,
+                      onTap: _openDetection,
                     ),
                     const SizedBox(height: 10),
                     _buildToolCard(
@@ -82,7 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildToolCard(
                       icon: Icons.tune_rounded,
                       title: 'Sensitivity & permissions',
-                      subtitle: 'Camera integration is the next implementation step.',
+                      subtitle: 'Review the camera and on-device processing limits.',
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: _showPermissionInfo,
                     ),
@@ -201,7 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildStatusCard() {
     final status = _enabled ? 'Protection enabled' : 'Protection is off';
     final description = _enabled
-        ? 'Ready for camera detection integration.'
+        ? 'Open live detection to start the front camera.'
         : 'Enable the guard when you want to configure protection.';
     return Card(
       child: Padding(
@@ -304,12 +305,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Designed for on-device processing. Face detection is only a signal and cannot reliably prove someone is reading your screen. This preview does not yet use the camera.',
+              'Camera frames are analyzed on-device and are not saved or uploaded. Face detection is only a signal and cannot prove someone is reading your screen.',
               style: TextStyle(color: Colors.white70, height: 1.45, fontSize: 12.5),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _openDetection() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const CameraDetectionScreen()),
     );
   }
 
