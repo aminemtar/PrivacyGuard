@@ -1,30 +1,31 @@
 # Privacy Guard
 
-Flutter app for experimenting with shoulder-surfing signals and in-app privacy protection on Android and iOS.
+Flutter app for experimenting with shoulder-surfing signals and privacy protection on Android and iOS.
 
-## Current MVP
+## Current features
 
-- Premium blue dashboard with saved enable/disable preference.
-- Front-camera preview and on-device ML Kit face detection.
+- Premium blue dashboard with a saved enable/disable preference.
+- Front-camera preview and on-device ML Kit face detection while the detection screen is active.
 - A debounced detection state machine that requires repeated multi-face frames before activating protection.
 - In-app privacy shield preview.
+- Android-only manual screen-wide dimming overlay using a native Kotlin service and the system Display over other apps permission.
 - Unit tests for the detection state machine.
 - Camera frames are processed locally and are not saved or uploaded by the app code.
 
 ## Important limitations
 
-- Multiple faces are only a heuristic. Face detection does not prove that someone is looking at the display.
-- The privacy shield only covers the Flutter UI in this app. It cannot change viewing-angle optics or protect arbitrary apps.
-- iOS does not allow a general-purpose overlay over arbitrary other apps.
-- Android cross-app overlay support would need a separate native implementation and special user-granted access. Background camera behavior is restricted by Android versions and device policies.
+- **This is not a physical anti-spy filter.** An app cannot change the display's viewing angles. The Android overlay darkens/tints the screen and may reduce casual visibility, but it cannot make the display optically invisible from the side.
+- The Android-wide overlay is **manual**, not automatically triggered by camera detection. The camera detector stops when the detection screen/app becomes inactive, as required by normal camera lifecycle handling and platform restrictions.
+- A second face is only a rough heuristic. It does not prove that someone is looking at the display.
+- iOS does not allow a general-purpose overlay over arbitrary other apps. The Android-wide tint feature is Android-only.
+- Some Android vendors may restrict or kill background services. The user can stop the overlay from the app; if needed, revoke Display over other apps access in Android Settings or force-stop the app.
+- The overlay is intentionally non-touchable so it does not intercept taps; its dim tint may make underlying content harder to read.
 
 ## Run locally
 
-The repository includes the Flutter application and generated Android/iOS platform folders.
-
 1. Install Flutter stable and clone this repository.
 2. Ensure the iOS deployment target is at least 15.5 (required by ML Kit).
-3. The Android camera permission and iOS camera usage description are already declared in the platform files. Then run:
+3. Run:
 
    ```bash
    flutter pub get
@@ -33,22 +34,11 @@ The repository includes the Flutter application and generated Android/iOS platfo
    flutter run
    ```
 
-### Required camera permissions
+### Permissions
 
-The camera usage description is declared in `ios/Runner/Info.plist`:
+Android declares the camera permission and SYSTEM_ALERT_WINDOW. The camera plugin requests camera access when detection starts. The screen-wide overlay requires the user to explicitly grant **Display over other apps** access from Android Settings. No microphone permission is required.
 
-```xml
-<key>NSCameraUsageDescription</key>
-<string>Privacy Guard uses the front camera to detect a possible nearby viewer. Frames are processed on this device.</string>
-```
-
-The Android camera permission is declared in `android/app/src/main/AndroidManifest.xml`, above the `<application>` element:
-
-```xml
-<uses-permission android:name="android.permission.CAMERA" />
-```
-
-The camera plugin requests runtime camera access when the camera is initialized. Do not add microphone permission; this app does not record audio.
+iOS declares NSCameraUsageDescription in ios/Runner/Info.plist.
 
 ## Architecture
 
@@ -56,4 +46,4 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Branch
 
-Initial implementation is on [`feature/flutter-mvp`](https://github.com/aminemtar/PrivacyGuard/tree/feature/flutter-mvp). The default branch was only initialized with a README.
+Implementation is on [feature/flutter-mvp](https://github.com/aminemtar/PrivacyGuard/tree/feature/flutter-mvp).
