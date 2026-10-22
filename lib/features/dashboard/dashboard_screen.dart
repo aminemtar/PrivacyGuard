@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/privacy_guard_app.dart';
@@ -30,7 +31,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadSettings() async {
     final preferences = await SharedPreferences.getInstance();
-    final overlayActive = await AndroidPrivacyOverlay.hasPermission().catchError((_) => false);
     if (!mounted) return;
     setState(() {
       _enabled = preferences.getBool(_enabledKey) ?? false;
@@ -38,9 +38,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // This tracks permission availability, not whether the native window is active.
       _systemOverlayActive = false;
     });
-    if (!overlayActive) {
-      // Keep the dashboard usable if Android overlay access has not been granted.
-    }
   }
 
   Future<void> _setEnabled(bool value) async {
